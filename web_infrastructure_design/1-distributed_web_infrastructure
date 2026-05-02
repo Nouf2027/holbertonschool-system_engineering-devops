@@ -1,0 +1,115 @@
+A user wants to access the website www.foobar.com:
+
+1. The user enters "www.foobar.com" in their browser.
+2. The browser sends a DNS request to resolve the domain name.
+3. DNS returns the IP address of the load balancer.
+4. The browser sends an HTTP/HTTPS request to the load balancer.
+5. HAProxy (load balancer) receives the request.
+6. HAProxy distributes the request to one of the two backend servers.
+7. The selected server’s Nginx (web server) receives the request:
+   - If static content is requested, it serves it directly.
+   - If dynamic content is needed, it forwards the request to the application server.
+8. The application server processes the request:
+   - Executes application logic.
+   - Queries the MySQL database.
+9. The database returns data to the application server.
+10. The application server builds the response.
+11. Nginx returns the response to HAProxy.
+12. HAProxy sends the final response back to the user’s browser.
+
+--------------------------------------------------
+
+Infrastructure components:
+
+- 1 Domain name:
+  foobar.com with a "www" A record pointing to the load balancer IP
+
+- 1 Load balancer:
+  - HAProxy
+
+- 2 Servers (backend servers), each containing:
+  - Web server: Nginx
+  - Application server
+  - Application files (code base)
+  - Database: MySQL
+
+--------------------------------------------------
+
+Why additional elements are added:
+
+Load balancer (HAProxy):
+- Distributes incoming traffic across multiple servers
+- Improves availability and reliability
+- Prevents overload on a single server
+
+Second server:
+- Provides redundancy
+- Ensures the system continues working if one server fails
+- Enables load distribution
+
+--------------------------------------------------
+
+Load balancer distribution algorithm:
+
+Example: Round Robin
+- Requests are distributed sequentially across servers
+- Server1 → Server2 → Server1 → Server2 ...
+- Ensures even distribution under normal conditions
+
+--------------------------------------------------
+
+Active-Active vs Active-Passive:
+
+Active-Active:
+- Both servers handle traffic simultaneously
+- Improves performance and utilization
+- This infrastructure uses Active-Active
+
+Active-Passive:
+- One server handles traffic, the other is on standby
+- Passive server takes over only if the active one fails
+
+--------------------------------------------------
+
+Database Primary-Replica (Master-Slave) cluster:
+
+- One database acts as Primary (Master):
+  - Handles write operations (INSERT, UPDATE, DELETE)
+
+- Other database acts as Replica (Slave):
+  - Replicates data from the Primary
+  - Handles read operations
+
+Replication process:
+- Primary logs changes
+- Replica reads logs and applies the same changes
+
+--------------------------------------------------
+
+Difference between Primary and Replica (application perspective):
+
+Primary:
+- Used for write queries
+- Source of truth
+
+Replica:
+- Used for read queries
+- Reduces load on Primary
+- May have slight replication delay
+
+--------------------------------------------------
+
+Issues with this infrastructure:
+
+1. Single Points of Failure (SPOF):
+   - Load balancer (only one instance)
+   - Database Primary (if it fails, writes stop)
+
+2. Security issues:
+   - No firewall to restrict traffic
+   - No HTTPS (data transmitted in plain text)
+
+3. No monitoring:
+   - No visibility into system health
+   - Failures may go undetected
+   - No alerting or performance tracking
