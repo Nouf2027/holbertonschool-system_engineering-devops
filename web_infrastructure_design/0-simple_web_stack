@@ -1,0 +1,73 @@
+A user wants to access the website www.foobar.com:
+
+1. The user enters "www.foobar.com" in their browser.
+2. The browser sends a DNS request to resolve the domain name.
+3. DNS returns the IP address 8.8.8.8 (configured via an A record).
+4. The browser sends an HTTP/HTTPS request to the server at 8.8.8.8.
+5. The request reaches the server hosting the web infrastructure.
+6. Nginx (web server) receives the request:
+   - If static content is requested, it serves it directly.
+   - If dynamic content is needed, it forwards the request to the application server.
+7. The application server processes the request:
+   - Executes application logic.
+   - Queries the MySQL database if needed.
+8. The database returns the requested data to the application server.
+9. The application server builds the response.
+10. Nginx sends the HTTP response back to the user’s browser.
+
+--------------------------------------------------
+
+Infrastructure components:
+
+- 1 Domain name:
+  foobar.com with a "www" A record pointing to 8.8.8.8
+
+- 1 Server (8.8.8.8) containing:
+  - Web server: Nginx
+  - Application server
+  - Application files (code base)
+  - Database: MySQL
+
+--------------------------------------------------
+
+Explanations:
+
+What is a server:
+A server is a machine (physical or virtual) that provides services to other computers over a network.
+
+What is the role of the domain name:
+It maps a human-readable name (foobar.com) to an IP address, allowing users to access the website easily.
+
+What type of DNS record is "www":
+It is an A record (maps a domain name to an IPv4 address).
+
+What is the role of the web server (Nginx):
+- Handles incoming HTTP/HTTPS requests
+- Serves static files
+- Acts as a reverse proxy to the application server
+
+What is the role of the application server:
+- Runs the application logic
+- Processes dynamic requests
+- Communicates with the database
+
+What is the role of the database (MySQL):
+- Stores and retrieves structured data
+- Provides persistent storage for the application
+
+What does the server use to communicate with the user:
+- HTTP/HTTPS protocols over TCP/IP
+
+--------------------------------------------------
+
+Issues with this infrastructure:
+
+1. Single Point of Failure (SPOF):
+   - If the server fails, the entire website becomes unavailable.
+
+2. Downtime during maintenance:
+   - Restarting services (e.g., deploying new code) causes downtime.
+
+3. No scalability:
+   - A single server cannot handle high traffic.
+   - No load balancing or horizontal scaling.
