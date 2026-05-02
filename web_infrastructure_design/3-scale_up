@@ -1,0 +1,98 @@
+A user wants to access the website www.foobar.com:
+
+1. The user enters "https://www.foobar.com" in their browser.
+2. DNS resolves the domain to the IPs of a load balancer cluster.
+3. The request is sent over HTTPS to HAProxy (Load Balancer Cluster).
+4. HAProxy (LB1 or LB2) receives the request.
+5. HAProxy distributes traffic to the Web Server.
+6. Web Server processes static content and forwards dynamic requests to the Application Server.
+7. Application Server executes business logic.
+8. Application Server queries the Database Server.
+9. Database returns data.
+10. Response flows back:
+   Database → Application Server → Web Server → Load Balancer → User
+
+--------------------------------------------------
+
+Infrastructure components (scaled architecture):
+
+- 1 Domain name:
+  foobar.com pointing to a load balancer cluster
+
+- 2 Load balancers (HAProxy cluster):
+  - HAProxy 1
+  - HAProxy 2
+  (configured for redundancy and failover)
+
+- 1 additional server (newly added):
+  - Used to split services into dedicated machines
+
+- Dedicated servers after scaling:
+
+  1. Web Server (Nginx only)
+  2. Application Server (backend logic only)
+  3. Database Server (MySQL only)
+
+--------------------------------------------------
+
+Why each new element is added:
+
+1. Second load balancer (cluster setup):
+   - Removes single point of failure
+   - Ensures high availability
+   - If one load balancer fails, the other continues handling traffic
+
+2. Additional server:
+   - Enables separation of concerns (web, app, DB no longer co-located)
+   - Improves performance by isolating workloads
+   - Allows independent scaling of each layer
+
+3. Splitting components into dedicated servers:
+
+   Web server:
+   - Handles HTTP requests and static content efficiently
+   - Offloads routing from application logic
+
+   Application server:
+   - Focuses only on business logic
+   - Can scale independently based on computation load
+
+   Database server:
+   - Dedicated to storage and query processing
+   - Prevents CPU/memory contention with web/app layers
+
+--------------------------------------------------
+
+Application server vs Web server:
+
+Web server (Nginx):
+- Handles HTTP requests
+- Serves static files (HTML, CSS, images)
+- Acts as reverse proxy
+- Does not execute business logic
+
+Application server:
+- Runs backend application code
+- Processes business rules
+- Handles dynamic requests
+- Communicates with database
+
+--------------------------------------------------
+
+What changes improve scalability:
+
+- Horizontal scaling of load balancers improves availability
+- Separation of services allows independent scaling:
+  - More web servers for high traffic
+  - More app servers for computation load
+  - Stronger database hardware or replication for data load
+
+--------------------------------------------------
+
+Key improvement outcome:
+
+- No shared components
+- Reduced bottlenecks
+- Better fault isolation
+- Higher performance under load
+- Improved system reliability
