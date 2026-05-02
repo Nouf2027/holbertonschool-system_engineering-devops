@@ -1,0 +1,132 @@
+2-secured_and_monitored_web_infrastructure
+
+A user wants to access the website www.foobar.com:
+
+1. The user enters "https://www.foobar.com" in their browser.
+2. DNS resolves the domain name to the IP of the load balancer.
+3. The request is sent over HTTPS (encrypted traffic).
+4. The request passes through Firewall 1 (network perimeter protection).
+5. HAProxy (load balancer) receives the encrypted request.
+6. HAProxy forwards the request to one of the two backend servers.
+7. Before reaching each server, traffic passes through Firewall 2 or Firewall 3 (server-level protection).
+8. Nginx (web server) receives the request:
+   - Serves static content directly.
+   - Forwards dynamic requests to the application server.
+9. Application server processes the request:
+   - Executes business logic.
+   - Queries MySQL database if needed.
+10. Database returns data.
+11. Response goes back through application server → Nginx → load balancer → user.
+
+--------------------------------------------------
+
+Infrastructure components:
+
+- 1 Domain name:
+  foobar.com with HTTPS enabled (SSL/TLS certificate installed)
+
+- 1 Load balancer:
+  HAProxy (handles traffic distribution)
+
+- 2 Servers:
+  Each contains:
+  - Firewall (server-level firewall rules)
+  - Nginx (web server)
+  - Application server
+  - Application files
+  - MySQL (database instance, though not ideal as discussed later)
+  - Monitoring client (Sumo Logic or similar agent)
+
+- 3 Firewalls:
+  1. Network firewall (between internet and load balancer)
+  2. Firewall protecting Server 1
+  3. Firewall protecting Server 2
+
+- 1 SSL certificate:
+  Used to encrypt traffic between client and infrastructure (HTTPS)
+
+- 3 Monitoring clients:
+  Installed on:
+  - Load balancer
+  - Server 1
+  - Server 2
+
+--------------------------------------------------
+
+Why each element is added:
+
+Firewalls:
+- Control incoming and outgoing network traffic
+- Block unauthorized access
+- Reduce attack surface (DDoS, intrusion attempts)
+
+SSL certificate:
+- Encrypts traffic between user and infrastructure
+- Prevents eavesdropping and man-in-the-middle attacks
+- Ensures data integrity and authenticity
+
+Monitoring clients:
+- Collect metrics (CPU, memory, latency, errors)
+- Send logs and performance data to monitoring system (e.g., Sumo Logic)
+- Help detect incidents and performance degradation
+
+--------------------------------------------------
+
+What firewalls are for:
+- Security layer that filters traffic based on rules
+- Allows only legitimate requests to reach servers
+- Blocks malicious or unnecessary traffic
+
+--------------------------------------------------
+
+Why HTTPS is used:
+- Encrypts communication using TLS
+- Protects sensitive data (passwords, sessions)
+- Prevents interception or tampering of requests/responses
+
+--------------------------------------------------
+
+What monitoring is used for:
+- Observability of infrastructure health
+- Detect failures, bottlenecks, and anomalies
+- Track performance and usage metrics over time
+
+--------------------------------------------------
+
+How monitoring tool collects data:
+- Monitoring agents run on each server
+- They collect system metrics and logs
+- Data is sent to a central monitoring platform (e.g., Sumo Logic)
+- Platform aggregates and visualizes data (dashboards, alerts)
+
+--------------------------------------------------
+
+Monitoring web server QPS (Queries Per Second):
+
+To monitor QPS:
+- Configure monitoring agent to track:
+  - Nginx access logs
+  - Request count per second
+- Use log parsing or metrics exporter
+- Create dashboard showing:
+  - Requests/sec over time
+- Set alerts if QPS exceeds thresholds or drops abnormally
+
+--------------------------------------------------
+
+Issues with this infrastructure:
+
+1. SSL termination at load balancer:
+   - Traffic between load balancer and backend servers is unencrypted
+   - Internal network becomes vulnerable to interception
+
+2. Single MySQL write server:
+   - Only one writable database instance
+   - Becomes a bottleneck under high load
+   - Single point of failure for writes
+
+3. Same components on all servers:
+   - No proper separation of concerns
+   - Harder to scale independently (web/app/db tied together)
+   - Resource contention (database competes with web/app services)
+   - Reduced flexibility and maintainability
